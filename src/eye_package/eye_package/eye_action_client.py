@@ -9,6 +9,7 @@ from control_msgs.action import FollowJointTrajectory
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 from std_msgs.msg import Float32
+from std_msgs.msg import Float32MultiArray
 
 class MoveEyeClientHorizontal(Node):
 
@@ -19,7 +20,7 @@ class MoveEyeClientHorizontal(Node):
 
         # Subscriber to get data from face tracker
         self.get_data = self.create_subscription(
-            Float32,
+            Float32MultiArray,
             'move_eye_horizontal',
             self.send_goal,
             10,
@@ -34,11 +35,17 @@ class MoveEyeClientHorizontal(Node):
         jtp.velocities = [0.0]
         jtp.time_from_start.sec = 0
         jtp.time_from_start.nanosec = 0   
-        jtp.positions = [position.data]
-
+        jtp.positions = [position.data[0]]
+        if position.data[1] == 1.0:
+            joint = "eyes_shift_horizontal_joint"
+        else:
+            joint = "eyes_shift_vertical_joint"
         # Build message
+        jointNames = []
+        #print(joint)
+        jointNames.append(joint)
         goal_msg.points = [jtp]
-        goal_msg.joint_names = ["eyes_shift_horizontal_joint"]
+        goal_msg.joint_names = jointNames
 
         # Assign goal
         goal = FollowJointTrajectory.Goal()
@@ -46,7 +53,7 @@ class MoveEyeClientHorizontal(Node):
 
         self.eye_action_client_horizontal.wait_for_server()
 
-        self.get_logger().info('Goal: %f' % jtp.positions[0])
+        self.get_logger().info('Goal: %f ' % jtp.positions[0])
 
         self.eye_action_client_horizontal.send_goal_async(goal)
 

@@ -3,32 +3,43 @@ import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import Float32
-
+from std_msgs.msg import Float32MultiArray
 
 
 class EyeDataPublisherHorizontal(Node):
 
     def __init__(self):
         super().__init__('eye_data_publisher_horizontal')
-        self.publisher_ = self.create_publisher(Float32, 'move_eye_horizontal', 10)
+        self.publisher_ = self.create_publisher(Float32MultiArray, 'move_eye_horizontal', 10)
         timer_period = 1.0
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.left = True
-        self.pos = 1.0
+        self.direction = 1.0
+        self.x = 0.0
+        self.y = 0.0
 
     def timer_callback(self):
-        msg = Float32()
-        msg.data = self.pos
+        #msg = Float32()
+        msg1 = Float32MultiArray()
+        msg1.data = [self.x, 1.0]
+        msg2 = Float32MultiArray()
+        msg2.data = [self.y, -1.0]
         if self.left:
-            self.pos = -1.0
             self.left = False
+            self.x = 0.5
+            self.y = -0.5
         else:
-            self.pos = 1.0
             self.left = True
+            self.x = -0.5
+            self.y = 0.5
 
-        self.publisher_.publish(msg)
+        self.publisher_.publish(msg1)
 
-        self.get_logger().info('Publishing: %f' % msg.data)
+        self.get_logger().info('Publishing: %f' % msg1.data[0])
+
+        self.publisher_.publish(msg2)
+
+        self.get_logger().info('Publishing: %f' % msg2.data[0])
         
 
 def main(args=None):
